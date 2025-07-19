@@ -3,19 +3,22 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ¡No olvides cambiar esta clave por una secreta en producción y NO subirla a GitHub!
-SECRET_KEY = 'django-insecure-@x4&rl-rxsp8ir1@k#f($p))qq9zrp3j@m2&9rq4n+$l)k&0#_'
+# Clave secreta desde variable de entorno, con valor por defecto para desarrollo
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-@x4&rl-rxsp8ir1@k#f($p))qq9zrp3j@m2&9rq4n+$l)k&0#_')
 
-# Variable para controlar entorno (True = desarrollo local, False = producción)
-LOCAL_DEV = True  # Cambiar a False cuando despliegues en Render o en producción
+# Control de entorno: 'True' (cadena) para desarrollo local, 'False' para producción
+LOCAL_DEV = os.environ.get('LOCAL_DEV', 'True') == 'True'
 
-# Debug activo solo en desarrollo
 DEBUG = LOCAL_DEV
 
-# Dominios permitidos (agrega aquí tus dominios reales)
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'tu-dominio.com', 'eventos-utc.onrender.com']
+# Dominios permitidos — agregar aquí el dominio Render y otros que uses
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'tu-dominio.com',
+    'eventos-utc.onrender.com',
+]
 
-# Aplicaciones instaladas
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -24,13 +27,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'eventos',
-    'axes',  # Protección contra ataques de fuerza bruta
+    'axes',
 ]
 
-# Middleware, axes debe ir antes que AuthenticationMiddleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'axes.middleware.AxesMiddleware',  # Protege login con django-axes
+    'axes.middleware.AxesMiddleware',  # antes de AuthenticationMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -41,7 +43,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'eventos_seguro.urls'
 
-# Plantillas HTML
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -59,25 +60,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'eventos_seguro.wsgi.application'
 
-# Configuración de base de datos (verifica que la config sea válida en Render)
+# Configuración de base de datos desde variables de entorno
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'eventos_utc',
-        'USER': 'root',
-        'PASSWORD': 'sigurd',
-        'HOST': '127.0.0.1',  # En Render puede cambiar (base de datos externa)
-        'PORT': '3307',
+        'NAME': os.environ.get('DB_NAME', 'eventos_utc'),
+        'USER': os.environ.get('DB_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'sigurd'),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', '3307'),
     }
 }
 
-# Backends de autenticación (axes primero para control de intentos fallidos)
 AUTHENTICATION_BACKENDS = [
     'axes.backends.AxesStandaloneBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Validadores de contraseña
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
@@ -85,13 +84,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
-# Internacionalización
 LANGUAGE_CODE = 'es-mx'
 TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 
-# Archivos estáticos y media
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'eventos' / 'static']
 
@@ -100,9 +97,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# --- Configuraciones de seguridad según entorno ---
 if LOCAL_DEV:
-    # Desarrollo local (sin HTTPS)
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
@@ -110,20 +105,16 @@ if LOCAL_DEV:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = False
     SECURE_HSTS_PRELOAD = False
 else:
-    # Producción (HTTPS activado)
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 3600  # 1 hora, puedes aumentar después
+    SECURE_HSTS_SECONDS = 3600
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-# Prevención de ataques comunes
-X_FRAME_OPTIONS = 'DENY'               # Evita que el sitio se cargue en iframes externos
-SECURE_BROWSER_XSS_FILTER = True       # Activa filtro XSS del navegador
-SECURE_CONTENT_TYPE_NOSNIFF = True     # Evita que el navegador interprete incorrectamente contenido
+X_FRAME_OPTIONS = 'DENY'
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
-# Configuración django-axes para protección de fuerza bruta
-AXES_FAILURE_LIMIT = 5  # Número de intentos fallidos antes de bloquear
-AXES_COOLOFF_TIME = 1   # Tiempo en horas que dura el bloqueo
-
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 1
