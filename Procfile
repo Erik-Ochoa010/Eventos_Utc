@@ -1,0 +1,1 @@
+web: gunicorn Eventos_Utc.wsgi

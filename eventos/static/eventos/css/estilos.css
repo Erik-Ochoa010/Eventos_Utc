@@ -1,0 +1,140 @@
+/* === GENERAL === */
+body {
+  padding-top: 4.5rem;
+  background: linear-gradient(135deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1);
+  background-attachment: fixed;
+  background-size: 400% 400%;
+  animation: sunsetBackground 18s ease infinite;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+@keyframes sunsetBackground {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* === HERO (Encabezado principal) === */
+.hero {
+  background: linear-gradient(to right, rgba(255, 175, 189, 0.85), rgba(255, 195, 160, 0.85)),
+              url("/static/eventos/img/bg-cultura.jpg") no-repeat center center;
+  background-size: cover;
+  color: white;
+  padding: 6rem 1rem;
+  text-align: center;
+  text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.7);
+}
+.hero h1 {
+  font-size: 3rem;
+}
+.hero p {
+  font-size: 1.2rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* === SEPARADOR DECORATIVO === */
+.separador {
+  height: 4px;
+  width: 80px;
+  background-color: #198754;
+  margin: 0 auto 1.5rem auto;
+  border-radius: 5px;
+  display: block;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+.separador:hover {
+  width: 120px;
+  background-color: #157347;
+}
+
+/* === BUSCADOR === */
+form#buscador-form input,
+form#buscador-form select {
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #ced4da;
+}
+form#buscador-form button {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* === TARJETAS DE EVENTOS === */
+.card-evento,
+.event-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.card-evento:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
+}
+.card-evento img {
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  max-height: 220px;
+  object-fit: cover;
+  width: 100%;
+}
+.card-evento .card-body {
+  padding: 1.2rem;
+  flex-grow: 1;
+}
+.card-evento h5 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.card-evento p {
+  font-size: 0.95rem;
+  color: #444;
+  margin-bottom: 0.4rem;
+}
+
+/* Botones en footer de tarjeta */
+.card-evento .card-footer {
+  background-color: transparent;
+  border-top: none;
+  padding-top: 0;
+}
+
+/* === BOTONES DE ACCIÓN === */
+.btn-outline-light {
+  border-width: 2px;
+  font-weight: 600;
+  padding: 0.6rem 1.5rem;
+}
+.btn-outline-light:hover {
+  background-color: white;
+  color: #212529;
+}
+
+/* === FOOTER === */
+footer {
+  background-color: #343a40;
+  color: white;
+  text-align: center;
+  padding: 1.5rem 0;
+  margin-top: 3rem;
+  font-size: 0.9rem;
+}
+
+/* === RESPONSIVE EXTRAS === */
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2.3rem;
+  }
+  .card-evento img {
+    max-height: 180px;
+  }
+}
