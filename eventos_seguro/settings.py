@@ -12,7 +12,7 @@ LOCAL_DEV = True  # 👈 CAMBIA a False cuando lo subas a producción
 DEBUG = LOCAL_DEV
 
 # Dominios o IPs permitidos
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'tu-dominio.com']  # Cambia 'tu-dominio.com'
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'tu-dominio.com', 'eventos-utc.onrender.com']  # Agrega tu dominio Render
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -126,8 +126,3 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 # django-axes settings (solo estas dos)
 AXES_FAILURE_LIMIT = 5  # Bloquea después de 5 intentos fallidos
 AXES_COOLOFF_TIME = 1   # Tiempo de bloqueo en horas
-
-# NOTA: Se eliminaron estas configuraciones obsoletas que generan warnings:
-# AXES_ONLY_USER_FAILURES
-# AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP
-# AXES_USE_USER_AGENT
