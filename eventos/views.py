@@ -1,11 +1,12 @@
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import login as auth_login
+from django.contrib.auth import login as auth_login, logout
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.template.loader import render_to_string
 from django.utils.html import escape
+from django.views.decorators.cache import never_cache
 from datetime import date, datetime
 from django.utils.dateparse import parse_date
 from .forms import RegistroForm, EventoForm
@@ -14,10 +15,12 @@ import re
 import calendar
 from collections import defaultdict
 
+@never_cache
 def index(request):
     eventos = Evento.objects.all().order_by('fecha')
     return render(request, 'index.html', {'eventos': eventos})
 
+@never_cache
 def registro(request):
     if request.method == 'POST':
         form = RegistroForm(request.POST)
@@ -35,9 +38,10 @@ def registro(request):
         'login_form': AuthenticationForm()
     })
 
+@never_cache
 def login_usuario(request):
     if request.method == 'POST':
-        form = AuthenticationForm(data=request.POST)
+        form = AuthenticationForm(request, data=request.POST)  # Importante pasar request
         if form.is_valid():
             user = form.get_user()
             auth_login(request, user)
@@ -46,17 +50,23 @@ def login_usuario(request):
         else:
             messages.error(request, 'Credenciales inválidas, intenta de nuevo.')
     else:
-        form = AuthenticationForm()
+        form = AuthenticationForm(request)  # Importante pasar request
     return render(request, 'registro.html', {
         'login_form': form,
         'register_form': RegistroForm()
     })
+
+def logout_usuario(request):
+    logout(request)
+    messages.success(request, 'Has cerrado sesión correctamente.')
+    return redirect('login')  # Cambia a la url que uses para login
 
 def es_superadmin(user):
     return user.is_superuser
 
 @login_required
 @user_passes_test(es_superadmin)
+@never_cache
 def crear_evento(request):
     if request.method == 'POST':
         form = EventoForm(request.POST, request.FILES)
@@ -72,6 +82,7 @@ def crear_evento(request):
 
 @login_required
 @user_passes_test(es_superadmin)
+@never_cache
 def editar_evento(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id)
     if request.method == 'POST':
@@ -88,6 +99,7 @@ def editar_evento(request, evento_id):
 
 @login_required
 @user_passes_test(es_superadmin)
+@never_cache
 def eliminar_evento(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id)
     if request.method == 'POST':
@@ -97,6 +109,7 @@ def eliminar_evento(request, evento_id):
     return render(request, 'eliminar_evento.html', {'evento': evento})
 
 @login_required
+@never_cache
 def carrito(request):
     return render(request, 'carrito.html')
 

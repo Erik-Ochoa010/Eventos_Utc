@@ -1,18 +1,22 @@
 from pathlib import Path
 import os
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-@x4&rl-rxsp8ir1@k#f($p))qq9zrp3j@m2&9rq4n+$l)k&0#_'
+# Clave secreta para desarrollo local (no usar en producción)
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-@x4&rl-rxsp8ir1@k#f($p))qq9zrp3j@m2&9rq4n+$l)k&0#_')
 
-# Variable para controlar si estás en entorno local de desarrollo
-LOCAL_DEV = True  # 👈 CAMBIA a False cuando lo subas a producción
+# Control de entorno: True para desarrollo local
+LOCAL_DEV = os.environ.get('LOCAL_DEV', 'True') == 'True'
 
-# Activa DEBUG solo en desarrollo
 DEBUG = LOCAL_DEV
 
-# Dominios o IPs permitidos
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'tu-dominio.com']  # Cambia 'tu-dominio.com'
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    # Agrega aquí otros dominios si los tienes
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -22,7 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'eventos',
-    'axes',  # django-axes para protección contra fuerza bruta
+    'axes',  # django-axes para protección contra ataques de fuerza bruta
 ]
 
 MIDDLEWARE = [
@@ -45,7 +49,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.request',
+                'django.template.context_processors.request',  # necesario para django-axes y login
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
@@ -58,35 +62,28 @@ WSGI_APPLICATION = 'eventos_seguro.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'eventos_utc',
-        'USER': 'root',
-        'PASSWORD': 'sigurd',
-        'HOST': '127.0.0.1',
-        'PORT': '3307',
+        'NAME': os.environ.get('DB_NAME', 'eventos_utc'),
+        'USER': os.environ.get('DB_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'sigurd'),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', '3307'),
     }
 }
 
 AUTHENTICATION_BACKENDS = [
-    'axes.backends.AxesStandaloneBackend',  # backend recomendado para django-axes >= 5.0
+    'axes.backends.AxesStandaloneBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
 LANGUAGE_CODE = 'es-mx'
+
 TIME_ZONE = 'America/Mexico_City'
 
 USE_I18N = True
@@ -100,9 +97,20 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ------ CONFIGURACIONES DE SEGURIDAD ------
+
+# middleware.py
+from django.utils.deprecation import MiddlewareMixin
+
+class NoCacheMiddleware(MiddlewareMixin):
+    def process_response(self, request, response):
+        if request.user.is_authenticated:
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+        return response
+
+# Seguridad para entorno local vs producción
 if LOCAL_DEV:
-    # Configuración para desarrollo local (sin HTTPS)
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
@@ -110,24 +118,20 @@ if LOCAL_DEV:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = False
     SECURE_HSTS_PRELOAD = False
 else:
-    # Configuración para producción (con HTTPS)
     SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 3600
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
 
-# Prevención de ataques comunes
 X_FRAME_OPTIONS = 'DENY'
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
-# django-axes settings (solo estas dos)
-AXES_FAILURE_LIMIT = 5  # Bloquea después de 5 intentos fallidos
-AXES_COOLOFF_TIME = 1   # Tiempo de bloqueo en horas
+# Configuración django-axes
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(hours=1)  # periodo de enfriamiento de 1 hora
+AXES_USE_USER_AGENT = True  # para diferenciar usuarios por navegador
+AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
 
-# NOTA: Se eliminaron estas configuraciones obsoletas que generan warnings:
-# AXES_ONLY_USER_FAILURES
-# AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP
-# AXES_USE_USER_AGENT
