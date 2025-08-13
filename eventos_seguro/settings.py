@@ -4,18 +4,20 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Clave secreta para desarrollo local (no usar en producción)
+# Clave secreta desde variable de entorno, con valor por defecto para desarrollo
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-@x4&rl-rxsp8ir1@k#f($p))qq9zrp3j@m2&9rq4n+$l)k&0#_')
 
-# Control de entorno: True para desarrollo local
+# Control de entorno: 'True' (cadena) para desarrollo local, 'False' para producción
 LOCAL_DEV = os.environ.get('LOCAL_DEV', 'True') == 'True'
 
 DEBUG = LOCAL_DEV
 
+# Dominios permitidos — agregar aquí el dominio Render y otros que uses
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    # Agrega aquí otros dominios si los tienes
+    'tu-dominio.com',
+    'eventos-utc.onrender.com',
 ]
 
 INSTALLED_APPS = [
@@ -31,7 +33,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'axes.middleware.AxesMiddleware',  # Debe ir antes de AuthenticationMiddleware
+    'axes.middleware.AxesMiddleware',  # debe ir antes de AuthenticationMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -59,6 +61,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'eventos_seguro.wsgi.application'
 
+# Configuración de base de datos desde variables de entorno
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -97,17 +100,16 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-# middleware.py
-from django.utils.deprecation import MiddlewareMixin
-
-class NoCacheMiddleware(MiddlewareMixin):
-    def process_response(self, request, response):
-        if request.user.is_authenticated:
-            response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-            response['Pragma'] = 'no-cache'
-            response['Expires'] = '0'
-        return response
+# Si quieres activar el middleware NoCache, descomenta estas líneas y agrega la clase NoCacheMiddleware a MIDDLEWARE
+# from django.utils.deprecation import MiddlewareMixin
+#
+# class NoCacheMiddleware(MiddlewareMixin):
+#     def process_response(self, request, response):
+#         if request.user.is_authenticated:
+#             response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+#             response['Pragma'] = 'no-cache'
+#             response['Expires'] = '0'
+#         return response
 
 # Seguridad para entorno local vs producción
 if LOCAL_DEV:
@@ -134,4 +136,3 @@ AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = timedelta(hours=1)  # periodo de enfriamiento de 1 hora
 AXES_USE_USER_AGENT = True  # para diferenciar usuarios por navegador
 AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
-
